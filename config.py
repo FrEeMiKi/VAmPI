@@ -1,17 +1,14 @@
 import os
+import secrets
 import connexion
 from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from connexion.exceptions import ProblemException
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
-limiter = Limiter(
-    get_remote_address,
-    app=vuln_app.app,
-    default_limits=["100 per day", "30 per hour"],
-    storage_uri="memory://"
-)
+if not os.environ.get('SECRET_KEY'):
+    os.environ['SECRET_KEY'] = secrets.token_hex(32)
+
+
 
 vuln_app = connexion.App(__name__, specification_dir='./openapi_specs')
 
@@ -19,7 +16,7 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(vuln_app.app.root_path, 'd
 vuln_app.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 vuln_app.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-vuln_app.app.config['SECRET_KEY'] = 'random'
+vuln_app.app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 # start the db
 db = SQLAlchemy(vuln_app.app)
 
