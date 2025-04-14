@@ -3,6 +3,15 @@ import connexion
 from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from connexion.exceptions import ProblemException
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    get_remote_address,
+    app=vuln_app.app,
+    default_limits=["100 per day", "30 per hour"],
+    storage_uri="memory://"
+)
 
 vuln_app = connexion.App(__name__, specification_dir='./openapi_specs')
 
