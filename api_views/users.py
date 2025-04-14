@@ -183,22 +183,22 @@ def update_password(username):
         return Response(error_message_helper(resp), 401, mimetype="application/json")
     else:
         if request_data.get('password'):
-            if vuln:  # Unauthorized update of password of another user
-                user = User.query.filter_by(username=username).first()
-                if user:
-                    user.password = request_data.get('password')
+            # Always check if the user is trying to update their own password or is an admin
+            user = User.query.filter_by(username=resp['sub']).first()
+            if user.username == username or user.admin:
+                target_user = User.query.filter_by(username=username).first()
+                if target_user:
+                    target_user.password = request_data.get('password')
                     db.session.commit()
+                    responseObject = {
+                        'status': 'success',
+                        'Password': 'Updated.'
+                    }
+                    return Response(json.dumps(responseObject), 204, mimetype="application/json")
                 else:
-                    return Response(error_message_helper("User Not Found"), 400, mimetype="application/json")
+                    return Response(error_message_helper("User Not Found"), 404, mimetype="application/json")
             else:
-                user = User.query.filter_by(username=resp['sub']).first()
-                user.password = request_data.get('password')
-                db.session.commit()
-            responseObject = {
-                'status': 'success',
-                'Password': 'Updated.'
-            }
-            return Response(json.dumps(responseObject), 204, mimetype="application/json")
+                return Response(error_message_helper("Unauthorized to update another user's password"), 403, mimetype="application/json")
         else:
             return Response(error_message_helper("Malformed Data"), 400, mimetype="application/json")
 
