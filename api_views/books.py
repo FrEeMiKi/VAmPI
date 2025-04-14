@@ -47,9 +47,13 @@ def get_by_title(book_title):
     if "error" in resp:
         return Response(error_message_helper(resp), 401, mimetype="application/json")
     else:
-        if vuln:  # Broken Object Level Authorization
-            book = Book.query.filter_by(book_title=str(book_title)).first()
-            if book:
+        # Always check if the user owns the book or is an admin
+        user = User.query.filter_by(username=resp['sub']).first()
+        book = Book.query.filter_by(book_title=str(book_title)).first()
+        
+        if book:
+            # Only allow access if user owns the book or is an admin
+            if book.user.username == user.username or user.admin:
                 responseObject = {
                     'book_title': book.book_title,
                     'secret': book.secret_content,
@@ -57,16 +61,6 @@ def get_by_title(book_title):
                 }
                 return Response(json.dumps(responseObject), 200, mimetype="application/json")
             else:
-                return Response(error_message_helper("Book not found!"), 404, mimetype="application/json")
+                return Response(error_message_helper("Unauthorized access to this book"), 403, mimetype="application/json")
         else:
-            user = User.query.filter_by(username=resp['sub']).first()
-            book = Book.query.filter_by(user=user, book_title=str(book_title)).first()
-            if book:
-                responseObject = {
-                    'book_title': book.book_title,
-                    'secret': book.secret_content,
-                    'owner': book.user.username
-                }
-                return Response(json.dumps(responseObject), 200, mimetype="application/json")
-            else:
-                return Response(error_message_helper("Book not found!"), 404, mimetype="application/json")
+            return Response(error_message_helper("Book not found!"), 404, mimetype="application/json")
