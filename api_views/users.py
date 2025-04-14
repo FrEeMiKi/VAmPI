@@ -57,16 +57,9 @@ def register_user():
         try:
             # validate the data are in the correct form
             jsonschema.validate(request_data, register_user_schema)
-            if vuln and 'admin' in request_data:  # User is possible to define if she/he wants to be an admin !!
-                if request_data['admin']:
-                    admin = True
-                else:
-                    admin = False
-                user = User(username=request_data['username'], password=request_data['password'],
-                            email=request_data['email'], admin=admin)
-            else:
-                user = User(username=request_data['username'], password=request_data['password'],
-                            email=request_data['email'])
+            # Never allow setting admin status from user input
+            user = User(username=request_data['username'], password=request_data['password'],
+                        email=request_data['email'], admin=False)
             db.session.add(user)
             db.session.commit()
 
@@ -80,8 +73,6 @@ def register_user():
             return Response(error_message_helper(exc.message), 400, mimetype="application/json")
     else:
         return Response(error_message_helper("User already exists. Please Log in."), 200, mimetype="application/json")
-
-
 def login_user():
     request_data = request.get_json()
 
