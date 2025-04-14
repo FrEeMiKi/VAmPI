@@ -68,17 +68,16 @@ class User(db.Model):
 
     @staticmethod
     def get_user(username):
-        if vuln:  # SQLi Injection
-            user_query = f"SELECT * FROM users WHERE username = '{username}'"
-            query = db.session.execute(text(user_query))
-            ret = query.fetchone()
-            if ret:
-                fin_query = '{"username": "%s", "email": "%s"}' % (ret[1], ret[3])
-            else:
-                fin_query = None
+    if vuln:  # SQLi Injection
+        # Fix: Use parameterized query instead of string interpolation
+        user = User.query.filter_by(username=username).first()
+        if user:
+            return str(user)
         else:
-            fin_query = User.query.filter_by(username=username).first()
-        return fin_query
+            return None
+    else:
+        fin_query = User.query.filter_by(username=username).first()
+    return fin_query
 
     @staticmethod
     def register_user(username, password, email, admin=False):
