@@ -17,7 +17,7 @@ vuln_app.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 vuln_app.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 vuln_app.app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-print(f"Current SECRET_KEY: {generated_secret_key}")
+print(f"Current SECRET_KEY: {vuln_app.app.config['SECRET_KEY']}")
 
 # start the db
 db = SQLAlchemy(vuln_app.app)
